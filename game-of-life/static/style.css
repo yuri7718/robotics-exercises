@@ -1,0 +1,18 @@
+h2 {
+    padding-top: 20px;
+}
+
+table {
+    margin: 0;
+    width: auto !important;
+}
+
+#game {
+    margin: 15px auto;
+}
+
+td {
+    border: 1px solid #B4B4B4;
+    width: 10px;
+    height: 10px;
+}

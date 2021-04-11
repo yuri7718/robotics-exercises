@@ -1,0 +1,176 @@
+<html>
+  <head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <div id="counter"></div>
+    <div class="container">
+      <h2 class="text-center">Conway's Game of Life</h2>
+      <table id="game" class="table "></table>
+      
+      <div class="row">
+        <div class="col-4 d-flex justify-content-center">
+          <div class="row">
+            <div class="col-2"><input class="form-check-input" type="radio" name="pattern" value="a"></div>
+            <div class="col-10"><table id="pattern-a" class="table"></table></div>
+          </div>
+        </div>
+        <div class="col-4 d-flex justify-content-center">
+          <div class="row">
+            <div class="col-2"><input class="form-check-input" type="radio" name="pattern" value="b"></div>
+            <div class="col-10"><table id="pattern-b" class="table"></table></div>
+          </div>
+        </div>
+        <div class="col-4 d-flex justify-content-center">
+          <div class="row">
+            <div class="col-2"><input class="form-check-input" type="radio" name="pattern" value="c"></div>
+            <div class="col-10"><table id="pattern-c" class="table"></table></div>
+          </div>
+        </div>
+      </div><!-- end .row -->
+      <div class="row">
+        <div class="col-4 d-flex justify-content-center">
+          <div class="row">
+            <div class="col-2"><input class="form-check-input" type="radio" name="pattern" value="d"></div>
+            <div class="col-10"><table id="pattern-d" class="table"></table></div>
+          </div>
+        </div>
+        <div class="col-4 d-flex justify-content-center">
+          <div class="row">
+            <div class="col-2"><input class="form-check-input" type="radio" name="pattern" value="e"></div>
+            <div class="col-10"><table id="pattern-e" class="table"></table></div>
+          </div>
+        </div>
+        <div class="col-4 d-flex justify-content-center">
+          <div class="row">
+            <div class="col-2"><input class="form-check-input" type="radio" name="pattern" value="f"></div>
+            <div class="col-10"><table id="pattern-f" class="table"></table></div>
+          </div>
+        </div>
+      </div><!-- end .row -->
+      <div class="row">
+        <div class="col-4 d-flex justify-content-center">
+          <div class="row">
+            <div class="col-2"><input class="form-check-input" type="radio" name="pattern" value="random"></div>
+            <div class="col-10"><label>Random Pattern</label></div>
+          </div>
+        </div>
+        <div class="col-4 d-flex justify-content-center"><button id="start" class="btn btn-outline-success" onclick="start()">Start</button></div>
+        <div class="col-4 d-flex justify-content-center"><button id="stop" class="btn btn-outline-danger" onclick="stop()">Stop</button></div>
+      </div>
+    </div><!--end .container-->
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+    <script>
+      const rows = 20, cols = 50;
+
+      function createGameBoard() {
+        let tbody = document.createElement('tbody');
+        for (let i=0; i<rows; i++) {
+          let tr = document.createElement('tr');
+          for (let j=0; j<cols; j++) {
+            let td = document.createElement('td');
+            td.setAttribute("id","t"+(i*cols+j));
+            tr.appendChild(td);
+          }
+          tbody.appendChild(tr);
+        }
+        document.getElementById("game").appendChild(tbody);
+      }
+
+      function createConfigOptions(config) {
+        for (let k in config) {
+          let arr = config[k];
+          let tbody = document.createElement('tbody');
+          for (let i=0; i<arr.length; i++) {
+            let tr = document.createElement('tr');
+            for (let j=0; j<arr[i].length; j++) {
+              let td = document.createElement('td');
+              if (arr[i][j] === 1) {
+                td.style.background = "#000";
+              }
+              tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+          }
+          document.getElementById("pattern-"+k).appendChild(tbody);
+        }
+      }
+
+      function display(array) {
+        array.forEach((x,i) => {
+          x.forEach((y,j) => {
+            y === 0 ?
+              document.getElementById("t"+(i*cols+j)).style.background = "#fff" :
+              document.getElementById("t"+(i*cols+j)).style.background = "#000";
+          });
+        });
+      }
+
+      createGameBoard();
+      createConfigOptions({{ config|tojson }});
+
+      function CustomEventSource(url) {
+        this.url = url;
+        this.es = null;
+        this.listeners = {};
+      }
+
+      CustomEventSource.prototype = {
+        constructor: CustomEventSource,
+
+        connect: function() {
+          this.es = new EventSource(this.url);
+          this.es.addEventListener("online", function(e) {
+            let data = JSON.parse(e.data);
+            display(data.state);
+          }, true);
+        },
+        disconnect: function() {
+          this.es.close();
+          this.es = null;
+        }
+      }
+
+      var source = new CustomEventSource("/start");
+
+      $(document).ready(function() {
+        $(document).on('change', 'input[name="pattern"]', function() {
+          let data = {
+            "myPattern": $(this).val(),
+            "rows": rows,
+            "cols": cols
+          };
+          $.post("/config", data, function(data) {
+            display(data);
+          }).fail(function(error) {
+            console.log(error);
+          });
+        });
+      });
+
+
+      function start() {
+        let pattern = document.querySelector('input[name="pattern"]:checked');
+        if (pattern === null) alert("Please select an initial pattern");
+        else {
+          source.connect();
+          $('input[name=pattern]').each(function(){
+            $(this).attr('disabled', true);
+          });
+          $('#start').attr('disabled', true);
+        }
+      }
+
+      function stop() {
+        if (source.es === null) return;
+        source.disconnect();
+        $('input[name=pattern]').each(function() {
+          $(this).attr('disabled', false);
+        });
+        $('#start').attr('disabled', false);
+      }
+    </script>
+  </body>
+</html>
