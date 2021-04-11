@@ -105,6 +105,7 @@ int main(int argc, char** argv)
         }
         soln << "\n";
     }
+    cout << "Please see the solution file" << endl;
     soln.close();
     return 0;
 }   
