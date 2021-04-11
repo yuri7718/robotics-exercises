@@ -1,6 +1,9 @@
 # Conway's Game of Life
 Conway's Game of Life implemented using Flask
 
+![screenshot](https://raw.githubusercontent.com/yuri7718/robotics-exercises/master/game-of-life/screenshot.png)
+![demo](https://raw.githubusercontent.com/yuri7718/robotics-exercises/master/game-of-life/demo.gif)
+
 ## Installation
 ```bash
 pip install -r requirements.txt
