@@ -96,7 +96,8 @@ int main(int argc, char** argv)
 
     ofstream soln;
     string s(argv[1]);
-    soln.open (s.substr(0,s.find("."))+"_soln.txt");
+    s = s.substr(0,s.find(".")) + "_soln.txt";
+    soln.open (s);
 
     soln << l.size() << "\n";
     for (int i=0; i<matrix.size(); i++) {
@@ -105,7 +106,7 @@ int main(int argc, char** argv)
         }
         soln << "\n";
     }
-    cout << "Please see the solution file" << endl;
+    cout << "Please see the " << s << " file" << endl;
     soln.close();
     return 0;
 }   
